@@ -1,27 +1,20 @@
-﻿namespace BiSharper.Rv.Bank.Models;
+﻿using BiSharper.Rv.Bank.IO.Source;
 
-public sealed record BankEntry
+namespace BiSharper.Rv.Bank.Models;
+
+public readonly struct BankEntry(EntryMime mime, string name, uint length, long offset, uint timestamp, uint bufferLength): IEquatable<BankEntry>, IBankEntry
 {
-    public required FileBank Owner { get; init; }
-    public required EntryMime Mime { get; init; } = EntryMime.Decompressed;
-    public required string Name { get; init; }
-    public required uint Length { get; init; }
-    public required long Offset { get; set; }
-    public required uint Timestamp { get; init; }
-    public required uint BufferLength { get; init; }
+    public EntryMime Mime { get; init; } = mime;
+    public string Name { get; init; } = name;
+    public uint Length { get; init; } = length;
+    public long Offset { get; init; } = offset;
+    public uint Timestamp { get; init; } = timestamp;
+    public uint BufferLength { get; init; } = bufferLength;
 
-    internal BankEntry()
-    {
-            
-    }
+    public bool Equals(BankEntry other) => Mime == other.Mime && Name == other.Name && Length == other.Length && Offset == other.Offset && Timestamp == other.Timestamp && BufferLength == other.BufferLength;
+    public override bool Equals(object? obj) => obj is BankEntry other && Equals(other);
+    public static bool operator ==(BankEntry left, BankEntry right) => left.Equals(right);
+    public static bool operator !=(BankEntry left, BankEntry right) => !(left == right);
+    public override int GetHashCode() =>  HashCode.Combine((int)Mime, Name, Length, Offset, Timestamp, BufferLength);
 
-    public byte[]? Read() => Owner.Read(this);
-    
-    public byte[]? ReadRaw() => Owner.ReadRaw(this);
-    
-    public async Task<byte[]?> ReadAsync(CancellationToken cancellationToken = default) => 
-        await Owner.ReadAsync(this, cancellationToken).ConfigureAwait(false);
-    
-    public async Task<byte[]?> ReadRawAsync(CancellationToken cancellationToken = default) =>
-        await Owner.ReadRawAsync(this, cancellationToken).ConfigureAwait(false);
 }
